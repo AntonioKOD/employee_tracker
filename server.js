@@ -85,6 +85,7 @@ function menu() {
             } 
             else if(results.list === 8){
                 console.log('Thank you')
+                process.exit()
             }
         })
 

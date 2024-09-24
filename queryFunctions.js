@@ -13,12 +13,18 @@ const pool = new Pool(
 pool.connect()
 
 function updateEmployee(displayAgain) {
-
-    pool.query('SELECT first_name, last_name FROM employee', (err, { rows }) => {
+ 
+    pool.query('SELECT employee_id, first_name, last_name FROM employee', (err, { rows }) => {
         const employees = rows.map(employee => ({
-            name: employee.first_name + ' ' + employee.last_name
+            name: employee.first_name + ' ' + employee.last_name,
+            id: employee.employee_id
         }))
 
+        pool.query('SELECT title, role_id FROM role', (err, { rows }) => {
+            const roles = rows.map(role => ({
+                title: role.title,
+                id: role.role_id
+            }))
 
         inquirer
             .prompt(
@@ -27,24 +33,32 @@ function updateEmployee(displayAgain) {
                         type: 'list',
                         name: 'employee',
                         message: "Select an employee",
-                        choices: employees.map(employee => employee.name)
+                       choices: employees.map(employee => ({
+                            name: employee.name,
+                            value: employee.employee_id  // Store role_id as the value
+                        }))
                     },
                     {
                         type: 'list',
                         name: 'newRole',
                         message: 'What will the new employee role be',
+                        choices: roles.map(role => ({
+                            name: role.title,
+                            value: role.id  // Store role_id as the value
+                        }))
                     },
                 ]
             )
             .then((answer) => {
                 pool.query(`UPDATE employee
-                    SET role = ${answer.newRole}
-                    WHERE employee.employee_id = ${answer.employee}`)
+                    SET role_id = $1
+                    WHERE employee.employee_id = $2`, [answer.newRole, answer.employee])
                 console.log(`Updated Employee`)
                 displayAgain()
 
 
             })
+        })
 
     })
 }
@@ -91,14 +105,16 @@ function addRole(displayAgain) {
 
 
 function addEmployee(displayAgain) {
-    pool.query('SELECT title FROM role', (err, { rows }) => {
+    pool.query('SELECT role_id, title FROM role', (err, { rows }) => {
         const roles = rows.map(role => ({
-            title: role.title
+            name: role.title,
+            value: role.role_id
         }))
 
-        pool.query('SELECT first_name, last_name FROM employee', (err, { rows }) => {
+        pool.query('SELECT employee_id,first_name, last_name FROM employee', (err, { rows }) => {
             const managers = rows.map(manager => ({
-                name: manager.first_name + ' ' + manager.last_name
+                name: manager.first_name + ' ' + manager.last_name,
+                value: manager.employee_id
             }))
             managers.push({
                 name: 'None',
@@ -122,17 +138,18 @@ function addEmployee(displayAgain) {
                             type: 'list',
                             name: 'role',
                             message: 'What is the role of the new employee',
-                            choices: roles.map(role => role.title)
+                            choices: roles
                         },
                         {
                             type: 'list',
                             name: 'manager',
                             message: 'Who is the manager of this employee',
-                            choices: managers.map(manager => manager.name),
+                            choices: managers
                         }
                     ]
                 )
                 .then((answer) => {
+                    console.log(answer)
                     pool.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${answer.firstName}', '${answer.lastName}', ${answer.role}, ${answer.manager} )`)
                     console.log(`Added ${answer.firstName} to employees`)
                     displayAgain()
