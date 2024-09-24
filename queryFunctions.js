@@ -1,3 +1,4 @@
+//file to store the functions that will be used on the server.js file
 const { Pool } = require('pg');
 const inquirer = require('inquirer');
 
@@ -50,6 +51,7 @@ function updateEmployee(displayAgain) {
                 ]
             )
             .then((answer) => {
+                //parameterized the funcion here because it would work better on the query and not throw any errors
                 pool.query(`UPDATE employee
                     SET role_id = $1
                     WHERE employee.employee_id = $2`, [answer.newRole, answer.employee])
@@ -63,7 +65,8 @@ function updateEmployee(displayAgain) {
     })
 }
 
-function addRole(displayAgain) {
+function addRole(displayAgain){
+//mapping the query to get the departments
     pool.query('SELECT department_id, name FROM departments', (err, { rows }) => {
         const departments = rows.map(department => ({
             name: department.name,
