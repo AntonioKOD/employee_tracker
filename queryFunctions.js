@@ -16,6 +16,8 @@ pool.connect()
 function updateEmployee(displayAgain) {
  
     pool.query('SELECT employee_id, first_name, last_name FROM employee', (err, { rows }) => {
+        // mapping over the employees and getting the name and the id of the employee 
+        // and then map again every employee to get the value as well so i can update the employee
         const employees = rows.map(employee => ({
             name: employee.first_name + ' ' + employee.last_name,
             id: employee.employee_id
@@ -51,7 +53,8 @@ function updateEmployee(displayAgain) {
                 ]
             )
             .then((answer) => {
-                //parameterized the funcion here because it would work better on the query and not throw any errors
+                //i had to parameterize this query because in any other way it was throwing errors 
+                //got this query from activity 23 
                 pool.query(`UPDATE employee
                     SET role_id = $1
                     WHERE employee.employee_id = $2`, [answer.newRole, answer.employee])
@@ -69,6 +72,7 @@ function addRole(displayAgain){
 //mapping the query to get the departments
     pool.query('SELECT department_id, name FROM departments', (err, { rows }) => {
         const departments = rows.map(department => ({
+            //get departments by name and value as thats the format that the choices accept
             name: department.name,
             value: department.department_id
         }))
@@ -94,6 +98,7 @@ function addRole(displayAgain){
                 ]
             )
             .then((answer) => {
+                // inserting the title, salary, department_id into the role table
                 pool.query(`INSERT INTO role (title, salary, department_id) VALUES ('${answer.roleName}', ${answer.salary}, ${answer.department})`)
                 displayAgain()
             })
